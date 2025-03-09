@@ -1,0 +1,46 @@
+#!/bin/bash
+# Wrapper script for crawlergo
+
+# Default values
+TARGET_FILE=""
+ROOT_DOMAIN_FILE=""
+CRAWLERGO_PATH="/root/go/bin/crawlergo"
+CHROME_PATH="/usr/bin/chromium-browser"
+PARAMS_FILE=""
+OUTPUT_DIR="crawler_output"
+
+# Parse arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -tf|--target-file) TARGET_FILE="$2"; shift ;;
+        -rf|--root-domain-file) ROOT_DOMAIN_FILE="$2"; shift ;;
+        -cgo|--crawlergo-path) CRAWLERGO_PATH="$2"; shift ;;
+        -c|--chrome-path) CHROME_PATH="$2"; shift ;;
+        -pf|--params-file) PARAMS_FILE="$2"; shift ;;
+        *) echo "Unknown parameter: $1"; exit 1 ;;
+    esac
+    shift
+done
+
+# Check if required files exist
+if [ ! -f "$TARGET_FILE" ]; then
+    echo "Error: Target file $TARGET_FILE not found"
+    exit 1
+fi
+
+# Create output directory if it doesn't exist
+mkdir -p "$OUTPUT_DIR"
+
+# Read target URLs
+while IFS= read -r url; do
+    echo "Crawling: $url"
+    output_file="$OUTPUT_DIR/$(echo "$url" | md5sum | cut -d' ' -f1).txt"
+    
+    # Run crawlergo
+    "$CRAWLERGO_PATH" -c "$CHROME_PATH" --output-mode json single "$url" > "$output_file"
+    
+    echo "Finished crawling: $url"
+    echo "Results saved to: $output_file"
+done < "$TARGET_FILE"
+
+echo "All crawling jobs completed"

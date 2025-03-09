@@ -1,0 +1,12 @@
+version: '3'
+services:
+  infogather:
+    build:
+      context: .
+    volumes:
+      - ./data:/app/scans
+      - ./rootdomains.txt:/app/rootdomains.txt
+    environment:
+      - WORK_DIR=/app
+    tty: true
+    stdin_open: true
